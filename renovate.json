@@ -1,4 +1,43 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"]
+  "extends": [
+    "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "description": [
+        "A NetBox patch bump stays inside the plugin's supported minor, since",
+        "netbox-bgp declares a MAXIMUM NetBox of <minor>.x, so nothing needs to",
+        "move with it. Automerge is gated on the PR build in build.yml: that",
+        "runs collectstatic with the plugins enabled, so a pin that no longer",
+        "imports fails the check and the PR stays open. Note ignoreTests is",
+        "deliberately absent here -- the build must actually pass.",
+        "Merging only publishes an image; nothing deploys until the tag bump",
+        "is merged in the homelab repo, which stays manual on purpose."
+      ],
+      "matchManagers": ["dockerfile"],
+      "matchPackageNames": ["ghcr.io/netbox-community/netbox"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "platformAutomerge": false
+    },
+    {
+      "description": [
+        "A NetBox minor/major needs a netbox-bgp release that supports it, and",
+        "the plugin can lag by weeks: NetBox 4.7.0 shipped 2026-09-02 but",
+        "netbox-bgp 0.20.0 only on 2026-09-16. For that fortnight the upgrade",
+        "was impossible and an automerged base bump would have published an",
+        "image whose plugin was past its ceiling. Group the two into one PR and",
+        "never automerge, so the matrix gets read by a human:",
+        "https://github.com/netbox-community/netbox-bgp/blob/master/COMPATIBILITY.md"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/netbox-community/netbox",
+        "netbox-bgp"
+      ],
+      "matchUpdateTypes": ["major", "minor"],
+      "groupName": "netbox minor/major + netbox-bgp",
+      "automerge": false
+    }
+  ]
 }
